@@ -1,4 +1,4 @@
-# go-pubsub
+# Go Event Queue
 
 Internal event queue with pub/sub pattern in Go with goroutines and channels
 
@@ -44,4 +44,9 @@ Push event to queue
 pub.Publish(mainCtx, NewEvent(TestEvent, "say"))
 ```
 
+## License
+MIT
+
+## Contribution
+All your contributions to project and make it better, they are welcome. Feel free to start an [issue](https://github.com/duysmile/goeventqueue/issues).
 
