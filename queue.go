@@ -1,4 +1,4 @@
-package eventqueue
+package goeventqueue
 
 type Queue interface {
 	GetEventChan() chan Event

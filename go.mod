@@ -1,3 +1,3 @@
-module github.com/duysmile/go-pubsub
+module github.com/duysmile/goeventqueue
 
 go 1.18

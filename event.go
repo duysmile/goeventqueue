@@ -1,4 +1,4 @@
-package eventqueue
+package goeventqueue
 
 type EventName string
 

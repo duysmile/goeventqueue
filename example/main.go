@@ -3,20 +3,20 @@ package main
 import (
 	"context"
 	"errors"
-	"github.com/duysmile/go-pubsub/eventqueue"
-	"github.com/duysmile/go-pubsub/eventqueue/publisher"
-	"github.com/duysmile/go-pubsub/eventqueue/subscriber"
+	"github.com/duysmile/goeventqueue"
+	"github.com/duysmile/goeventqueue/publisher"
+	"github.com/duysmile/goeventqueue/subscriber"
 	"log"
 	"sync"
 	"time"
 )
 
 type testEvent struct {
-	Name eventqueue.EventName
+	Name goeventqueue.EventName
 	Data interface{}
 }
 
-func (t testEvent) GetName() eventqueue.EventName {
+func (t testEvent) GetName() goeventqueue.EventName {
 	return t.Name
 }
 
@@ -24,7 +24,7 @@ func (t testEvent) GetData() interface{} {
 	return t.Data
 }
 
-func NewEvent(name eventqueue.EventName, data interface{}) eventqueue.Event {
+func NewEvent(name goeventqueue.EventName, data interface{}) goeventqueue.Event {
 	return &testEvent{
 		Name: name,
 		Data: data,
@@ -32,9 +32,9 @@ func NewEvent(name eventqueue.EventName, data interface{}) eventqueue.Event {
 }
 
 func main() {
-	var TestEvent eventqueue.EventName = "test-event"
+	var TestEvent goeventqueue.EventName = "test-event"
 
-	q := eventqueue.NewLocalQueue()
+	q := goeventqueue.NewLocalQueue()
 
 	pub := publisher.NewPublisher(q)
 	sub := subscriber.NewSubscriber(q, subscriber.Config{
