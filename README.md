@@ -3,78 +3,45 @@
 Internal event queue with pub/sub pattern in Go with goroutines and channels
 
 ### Usage
-Normal usage
-```Go
-package main
 
-import (
-	"context"
-	"errors"
-	"github.com/duysmile/go-pubsub/eventqueue"
-	"github.com/duysmile/go-pubsub/eventqueue/publisher"
-	"github.com/duysmile/go-pubsub/eventqueue/subscriber"
-	"log"
-	"time"
-)
+Create queue to communicate between publisher and subscriber
+```go
+q := eventqueue.NewLocalQueue()
+```
 
-type testEvent struct {
-	Name eventqueue.EventName
-	Data interface{}
-}
 
-func (t testEvent) GetName() eventqueue.EventName {
-	return t.Name
-}
+Create publisher to push event to queue
+```go
+pub := publisher.NewPublisher(q)
+```
+	
+Create subscriber to consume event
+```go
+// `MaxGoRoutine` to control max routines to consumer event
+// `MaxRetry` to control max backoff times to re-consumer event if it failed
+sub := subscriber.NewSubscriber(q, subscriber.Config{
+    MaxGoRoutine: 2,
+    MaxRetry:     0,
+})
+```
 
-func (t testEvent) GetData() interface{} {
-	return t.Data
-}
+Add handler to according event
+```go
+sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
+    log.Println("job 1", data)
+    wg.Done()
+    return nil
+})
+```
 
-func NewEvent(name eventqueue.EventName, data interface{}) eventqueue.Event {
-	return &testEvent{
-		Name: name,
-		Data: data,
-	}
-}
+Run workers to consume event
+```go
+sub.Start(mainCtx)
+```
 
-func main() {
-	var TestEvent eventqueue.EventName = "test-event"
-
-	q := eventqueue.NewLocalQueue()
-
-	pub := publisher.NewPublisher(q)
-	sub := subscriber.NewSubscriber(q, subscriber.Config{
-		MaxGoRoutine: 2,
-		MaxRetry:     0,
-	})
-
-	mainCtx := context.Background()
-
-	wg := sync.WaitGroup{}
-
-	wg.Add(3)
-	sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
-		log.Println("job 1", data)
-		wg.Done()
-		return nil
-	})
-	sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
-		log.Println("job 2", data)
-		wg.Done()
-		return nil
-	})
-	sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
-		log.Println("job 3", data)
-		wg.Done()
-		return nil
-	})
-
-	sub.Start(mainCtx)
-
-	_ = pub.Publish(mainCtx, NewEvent(TestEvent, "say"))
-	_ = pub.Publish(mainCtx, NewEvent(TestEvent, "hello"))
-	wg.Wait()
-}
+Push event to queue
+```go
+pub.Publish(mainCtx, NewEvent(TestEvent, "say"))
 ```
 
 
