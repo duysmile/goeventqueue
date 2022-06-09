@@ -82,7 +82,7 @@ func (s *subscriber) startWorker(ctx context.Context) {
 			for _, handler := range listHandler {
 				go func(ctx context.Context, handler Handler) {
 					job := NewJob(handler, JobConfig{
-						MaxBackOff: 3,
+						MaxBackOff: s.config.MaxRetry,
 					})
 					select {
 					case <-ctx.Done():

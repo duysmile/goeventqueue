@@ -7,6 +7,7 @@ import (
 	"github.com/duysmile/go-pubsub/eventqueue/publisher"
 	"github.com/duysmile/go-pubsub/eventqueue/subscriber"
 	"log"
+	"sync"
 	"time"
 )
 
@@ -38,37 +39,33 @@ func main() {
 	pub := publisher.NewPublisher(q)
 	sub := subscriber.NewSubscriber(q, subscriber.Config{
 		MaxGoRoutine: 2,
-		MaxRetry:     0,
+		MaxRetry:     1,
 	})
 
 	mainCtx := context.Background()
 
-	//wg := sync.WaitGroup{}
+	wg := sync.WaitGroup{}
 
-	//wg.Add(3)
-	//sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
-	//	log.Println("job 1", data)
-	//	wg.Done()
-	//	return nil
-	//})
-	//sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
-	//	log.Println("job 2", data)
-	//	wg.Done()
-	//	return nil
-	//})
+	wg.Add(3)
+	sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
+		log.Println("job 1", data)
+		wg.Done()
+		return nil
+	})
+	sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
+		log.Println("job 2", data)
+		wg.Done()
+		return nil
+	})
 	sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
 		log.Println("job 3", data)
 		time.Sleep(2 * time.Second)
-		//wg.Done()
+		wg.Done()
 		return errors.New("error")
 	})
 
 	sub.Start(mainCtx)
 
 	_ = pub.Publish(mainCtx, NewEvent(TestEvent, "hello"))
-	//_ = pub.Publish(mainCtx, NewEvent(TestEvent, "hi"))
-	//_ = pub.Publish(mainCtx, NewEvent(TestEvent, "bye"))
-	//wg.Wait()
-
-	<-mainCtx.Done()
+	wg.Wait()
 }
