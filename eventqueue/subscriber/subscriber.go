@@ -81,9 +81,12 @@ func (s *subscriber) startWorker(ctx context.Context) {
 			errChan := make(chan error, len(listHandler))
 			for _, handler := range listHandler {
 				go func(ctx context.Context, handler Handler) {
+					job := NewJob(handler, JobConfig{
+						MaxBackOff: 3,
+					})
 					select {
 					case <-ctx.Done():
-					case errChan <- handler(ctx, ev.GetData()):
+					case errChan <- job.Run(ctx, ev.GetData()):
 					}
 				}(ctx, handler)
 			}
@@ -92,7 +95,6 @@ func (s *subscriber) startWorker(ctx context.Context) {
 				if err := <-errChan; err != nil {
 					log.Println("Error handle job", err)
 				}
-
 			}
 		}
 	}
