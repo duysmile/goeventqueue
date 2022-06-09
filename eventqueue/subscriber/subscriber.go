@@ -9,7 +9,7 @@ import (
 
 type Subscriber interface {
 	Start(ctx context.Context)
-	Register(ctx context.Context, name eventqueue.EventName, handler Handler)
+	Register(name eventqueue.EventName, handler Handler)
 }
 
 type Config struct {
@@ -27,7 +27,7 @@ type subscriber struct {
 	locker          sync.Mutex
 }
 
-func (s *subscriber) Register(ctx context.Context, name eventqueue.EventName, handler Handler) {
+func (s *subscriber) Register(name eventqueue.EventName, handler Handler) {
 	s.locker.Lock()
 
 	listHandler, ok := s.mapEventHandler[name]

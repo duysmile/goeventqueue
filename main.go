@@ -46,17 +46,17 @@ func main() {
 	wg := sync.WaitGroup{}
 
 	wg.Add(9)
-	sub.Register(mainCtx, TestEvent, func(ctx context.Context, data interface{}) error {
+	sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
 		log.Println("job 1", data)
 		wg.Done()
 		return nil
 	})
-	sub.Register(mainCtx, TestEvent, func(ctx context.Context, data interface{}) error {
+	sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
 		log.Println("job 2", data)
 		wg.Done()
 		return nil
 	})
-	sub.Register(mainCtx, TestEvent, func(ctx context.Context, data interface{}) error {
+	sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
 		log.Println("job 3", data)
 		time.Sleep(2 * time.Second)
 		wg.Done()
