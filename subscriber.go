@@ -1,15 +1,14 @@
-package subscriber
+package goeventqueue
 
 import (
 	"context"
-	"github.com/duysmile/goeventqueue"
 	"log"
 	"sync"
 )
 
 type Subscriber interface {
 	Start(ctx context.Context)
-	Register(name goeventqueue.EventName, handler Handler)
+	Register(name EventName, handler Handler)
 }
 
 type Config struct {
@@ -20,14 +19,14 @@ type Config struct {
 type Handler func(ctx context.Context, data interface{}) error
 
 type subscriber struct {
-	queue           goeventqueue.Queue
-	pool            chan goeventqueue.Event
-	mapEventHandler map[goeventqueue.EventName][]Handler
+	queue           Queue
+	pool            chan Event
+	mapEventHandler map[EventName][]Handler
 	config          Config
 	locker          sync.Mutex
 }
 
-func (s *subscriber) Register(name goeventqueue.EventName, handler Handler) {
+func (s *subscriber) Register(name EventName, handler Handler) {
 	s.locker.Lock()
 
 	listHandler, ok := s.mapEventHandler[name]
@@ -100,11 +99,11 @@ func (s *subscriber) startWorker(ctx context.Context) {
 	}
 }
 
-func NewSubscriber(q goeventqueue.Queue, cfg Config) Subscriber {
+func NewSubscriber(q Queue, cfg Config) Subscriber {
 	return &subscriber{
 		queue:           q,
-		pool:            make(chan goeventqueue.Event, cfg.MaxGoRoutine),
-		mapEventHandler: make(map[goeventqueue.EventName][]Handler),
+		pool:            make(chan Event, cfg.MaxGoRoutine),
+		mapEventHandler: make(map[EventName][]Handler),
 		config:          cfg,
 	}
 }

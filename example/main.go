@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/duysmile/goeventqueue"
-	"github.com/duysmile/goeventqueue/publisher"
-	"github.com/duysmile/goeventqueue/subscriber"
 	"log"
 	"sync"
 	"time"
@@ -36,8 +34,8 @@ func main() {
 
 	q := goeventqueue.NewLocalQueue()
 
-	pub := publisher.NewPublisher(q)
-	sub := subscriber.NewSubscriber(q, subscriber.Config{
+	pub := goeventqueue.NewPublisher(q)
+	sub := goeventqueue.NewSubscriber(q, goeventqueue.Config{
 		MaxGoRoutine: 2,
 		MaxRetry:     1,
 	})
