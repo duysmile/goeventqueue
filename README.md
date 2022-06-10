@@ -6,20 +6,20 @@ Internal event queue with pub/sub pattern in Go with goroutines and channels
 
 Create queue to communicate between publisher and subscriber
 ```go
-q := eventqueue.NewLocalQueue()
+q := goeventqueue.NewLocalQueue()
 ```
 
 
 Create publisher to push event to queue
 ```go
-pub := publisher.NewPublisher(q)
+pub := goeventqueue.NewPublisher(q)
 ```
 	
 Create subscriber to consume event
 ```go
 // `MaxGoRoutine` to control max routines to consumer event
 // `MaxRetry` to control max backoff times to re-consumer event if it failed
-sub := subscriber.NewSubscriber(q, subscriber.Config{
+sub := goeventqueue.NewSubscriber(q, subscriber.Config{
     MaxGoRoutine: 2,
     MaxRetry:     0,
 })
