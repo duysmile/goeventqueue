@@ -14,12 +14,14 @@ type publisher struct {
 }
 
 func (p publisher) Publish(ctx context.Context, event goeventqueue.Event) error {
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case p.queue.GetEventChan() <- event:
-		return nil
-	}
+	go func(event goeventqueue.Event) {
+		select {
+		case <-ctx.Done():
+		case p.queue.GetEventChan() <- event:
+		}
+	}(event)
+
+	return nil
 }
 
 func NewPublisher(q goeventqueue.Queue) Publisher {
