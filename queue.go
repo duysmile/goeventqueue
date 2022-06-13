@@ -12,8 +12,8 @@ func (q *localQueue) GetEventChan() chan Event {
 	return q.events
 }
 
-func NewLocalQueue() Queue {
+func NewLocalQueue(size int) Queue {
 	return &localQueue{
-		events: make(chan Event),
+		events: make(chan Event, size),
 	}
 }

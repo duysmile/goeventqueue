@@ -32,7 +32,7 @@ func NewEvent(name goeventqueue.EventName, data interface{}) goeventqueue.Event 
 func main() {
 	var TestEvent goeventqueue.EventName = "test-event"
 
-	q := goeventqueue.NewLocalQueue()
+	q := goeventqueue.NewLocalQueue(2)
 
 	pub := goeventqueue.NewPublisher(q)
 	sub := goeventqueue.NewSubscriber(q, goeventqueue.Config{

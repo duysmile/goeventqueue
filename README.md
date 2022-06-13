@@ -6,7 +6,7 @@ Internal event queue with pub/sub pattern in Go with goroutines and channels
 
 Create queue to communicate between publisher and subscriber
 ```go
-q := goeventqueue.NewLocalQueue()
+q := goeventqueue.NewLocalQueue(2)
 ```
 
 
@@ -29,7 +29,6 @@ Add handler to according event
 ```go
 sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
     log.Println("job 1", data)
-    wg.Done()
     return nil
 })
 ```

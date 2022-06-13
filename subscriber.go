@@ -20,7 +20,6 @@ type Handler func(ctx context.Context, data interface{}) error
 
 type subscriber struct {
 	queue           Queue
-	pool            chan Event
 	mapEventHandler map[EventName][]Handler
 	config          Config
 	locker          sync.Mutex
@@ -38,36 +37,21 @@ func (s *subscriber) Register(name EventName, handler Handler) {
 }
 
 func (s *subscriber) Start(ctx context.Context) {
+	eQueue := s.queue.GetEventChan()
 	for i := int64(0); i < s.config.MaxGoRoutine; i++ {
-		go s.startWorker(ctx)
+		go func(ctx context.Context, eQueue chan Event) {
+			s.startWorker(ctx, eQueue)
+		}(ctx, eQueue)
 	}
-
-	go s.startMainLoop(ctx)
 }
 
-func (s *subscriber) startMainLoop(ctx context.Context) {
+func (s *subscriber) startWorker(ctx context.Context, eQueue chan Event) {
 	defer Recover()
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case ev, ok := <-s.queue.GetEventChan():
-			if !ok {
-				return
-			}
-
-			s.pool <- ev
-		}
-	}
-}
-
-func (s *subscriber) startWorker(ctx context.Context) {
-	defer Recover()
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case ev, ok := <-s.pool:
+		case ev, ok := <-eQueue:
 			if !ok {
 				return
 			}
@@ -102,7 +86,6 @@ func (s *subscriber) startWorker(ctx context.Context) {
 func NewSubscriber(q Queue, cfg Config) Subscriber {
 	return &subscriber{
 		queue:           q,
-		pool:            make(chan Event, cfg.MaxGoRoutine),
 		mapEventHandler: make(map[EventName][]Handler),
 		config:          cfg,
 	}
