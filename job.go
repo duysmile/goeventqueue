@@ -19,16 +19,16 @@ type job struct {
 func (j *job) Run(ctx context.Context, data interface{}) error {
 	var err error
 	for {
-		if j.backOff >= j.config.MaxBackOff {
-			return err
-		}
-
 		if err = j.handler(ctx, data); err != nil {
-			log.Println("Error handle job")
+			log.Println("error handle job", err)
 			j.backOff += 1
+			if j.backOff >= j.config.MaxBackOff {
+				return err
+			}
 
 			select {
 			case <-ctx.Done():
+				return ctx.Err()
 			case <-time.After(2 << j.backOff * time.Second):
 			}
 		} else {

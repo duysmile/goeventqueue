@@ -67,16 +67,14 @@ func (s *subscriber) startWorker(ctx context.Context, eQueue chan Event) {
 					job := NewJob(handler, JobConfig{
 						MaxBackOff: s.config.MaxRetry,
 					})
-					select {
-					case <-ctx.Done():
-					case errChan <- job.Run(ctx, ev.GetData()):
-					}
+
+					errChan <- job.Run(ctx, ev.GetData())
 				}(ctx, handler)
 			}
 
 			for i := 0; i < len(listHandler); i++ {
 				if err := <-errChan; err != nil {
-					log.Println("Error handle job", err)
+					log.Println("error after all retry times", err)
 				}
 			}
 		}

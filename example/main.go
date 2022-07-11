@@ -44,7 +44,7 @@ func main() {
 
 	wg := sync.WaitGroup{}
 
-	wg.Add(3)
+	wg.Add(4)
 	sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
 		log.Println("job 1", data)
 		wg.Done()
