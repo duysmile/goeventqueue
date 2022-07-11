@@ -12,7 +12,7 @@ import (
 
 type testEvent struct {
 	Name goeventqueue.EventName
-	Data interface{}
+	Data string
 }
 
 func (t testEvent) GetName() goeventqueue.EventName {
@@ -23,7 +23,7 @@ func (t testEvent) GetData() interface{} {
 	return t.Data
 }
 
-func NewEvent(name goeventqueue.EventName, data interface{}) goeventqueue.Event {
+func NewEvent(name goeventqueue.EventName, data string) goeventqueue.Event {
 	return &testEvent{
 		Name: name,
 		Data: data,
@@ -61,17 +61,29 @@ func main() {
 
 	wg.Add(4)
 	sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
-		log.Println("job 1", data)
+		validData, ok := data.(string)
+		if !ok {
+			return nil
+		}
+		log.Println("job 1", validData)
 		wg.Done()
 		return nil
 	})
 	sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
-		log.Println("job 2", data)
+		validData, ok := data.(string)
+		if !ok {
+			return nil
+		}
+		log.Println("job 2", validData)
 		wg.Done()
 		return nil
 	})
 	sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
-		log.Println("job 3", data)
+		validData, ok := data.(string)
+		if !ok {
+			return nil
+		}
+		log.Println("job 3", validData)
 		time.Sleep(2 * time.Second)
 		wg.Done()
 		return errors.New("error")
