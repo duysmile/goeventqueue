@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/duysmile/goeventqueue"
+	"go.uber.org/zap"
 	"log"
 	"sync"
 	"time"
@@ -29,6 +30,14 @@ func NewEvent(name goeventqueue.EventName, data interface{}) goeventqueue.Event 
 	}
 }
 
+type logger struct {
+	l *zap.Logger
+}
+
+func (l logger) Error(msg string, err error) {
+	l.l.Error(msg, zap.Error(err))
+}
+
 func main() {
 	var TestEvent goeventqueue.EventName = "test-event"
 
@@ -39,6 +48,12 @@ func main() {
 		MaxGoRoutine: 2,
 		MaxRetry:     1,
 	})
+
+	zLog, _ := zap.NewDevelopment()
+	logger := &logger{
+		l: zLog,
+	}
+	sub.WithLogger(logger)
 
 	mainCtx := context.Background()
 
@@ -66,4 +81,5 @@ func main() {
 
 	_ = pub.Publish(mainCtx, NewEvent(TestEvent, "hello"))
 	wg.Wait()
+	time.Sleep(2 * time.Second)
 }

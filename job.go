@@ -2,7 +2,6 @@ package goeventqueue
 
 import (
 	"context"
-	"log"
 	"time"
 )
 
@@ -20,7 +19,6 @@ func (j *job) Run(ctx context.Context, data interface{}) error {
 	var err error
 	for {
 		if err = j.handler(ctx, data); err != nil {
-			log.Println("error handle job", err)
 			j.backOff += 1
 			if j.backOff >= j.config.MaxBackOff {
 				return err

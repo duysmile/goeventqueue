@@ -2,13 +2,14 @@ package goeventqueue
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"sync"
 )
 
 type Subscriber interface {
 	Start(ctx context.Context)
 	Register(name EventName, handler Handler)
+	WithLogger(l Logger)
 }
 
 type Config struct {
@@ -23,6 +24,7 @@ type subscriber struct {
 	mapEventHandler map[EventName][]Handler
 	config          Config
 	locker          sync.Mutex
+	logger          Logger
 }
 
 func (s *subscriber) Register(name EventName, handler Handler) {
@@ -46,7 +48,7 @@ func (s *subscriber) Start(ctx context.Context) {
 }
 
 func (s *subscriber) startWorker(ctx context.Context, eQueue chan Event) {
-	defer Recover()
+	defer s.Recover()
 	for {
 		select {
 		case <-ctx.Done():
@@ -74,7 +76,7 @@ func (s *subscriber) startWorker(ctx context.Context, eQueue chan Event) {
 
 			for i := 0; i < len(listHandler); i++ {
 				if err := <-errChan; err != nil {
-					log.Println("error after all retry times", err)
+					s.logger.Error("error after all retry times", err)
 				}
 			}
 		}
@@ -86,11 +88,16 @@ func NewSubscriber(q Queue, cfg Config) Subscriber {
 		queue:           q,
 		mapEventHandler: make(map[EventName][]Handler),
 		config:          cfg,
+		logger:          NewDefaultLogger(),
 	}
 }
 
-func Recover() {
+func (s *subscriber) WithLogger(l Logger) {
+	s.logger = l
+}
+
+func (s *subscriber) Recover() {
 	if err := recover(); err != nil {
-		log.Println(err)
+		s.logger.Error("panic error", fmt.Errorf("%v", err))
 	}
 }
