@@ -25,6 +25,18 @@ sub := goeventqueue.NewSubscriber(q, subscriber.Config{
 })
 ```
 
+Define custom logger for subscriber
+```go
+// custom logger should implement this interface
+type Logger interface {
+    Error(msg string, err error)
+}
+
+// assign custom logger to subscriber
+sub.WithLogger(customLogger)
+
+```
+
 Add handler to according event
 ```go
 sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
