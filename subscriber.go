@@ -25,25 +25,28 @@ type subscriber struct {
 	config          Config
 	locker          sync.Mutex
 	logger          Logger
+	quit            chan struct{}
 }
 
 func (s *subscriber) Register(name EventName, handler Handler) {
 	s.locker.Lock()
+	defer s.locker.Unlock()
 
 	listHandler, ok := s.mapEventHandler[name]
 	if !ok {
 		listHandler = make([]Handler, 0)
 	}
 	s.mapEventHandler[name] = append(listHandler, handler)
-	s.locker.Unlock()
+}
+
+func (s *subscriber) Stop() {
+	close(s.quit)
 }
 
 func (s *subscriber) Start(ctx context.Context) {
 	eQueue := s.queue.GetEventChan()
 	for i := int64(0); i < s.config.MaxGoRoutine; i++ {
-		go func(ctx context.Context, eQueue chan Event) {
-			s.startWorker(ctx, eQueue)
-		}(ctx, eQueue)
+		go s.startWorker(ctx, eQueue)
 	}
 }
 
@@ -52,6 +55,8 @@ func (s *subscriber) startWorker(ctx context.Context, eQueue chan Event) {
 	for {
 		select {
 		case <-ctx.Done():
+			return
+		case <-s.quit:
 			return
 		case ev, ok := <-eQueue:
 			if !ok {
@@ -70,7 +75,10 @@ func (s *subscriber) startWorker(ctx context.Context, eQueue chan Event) {
 						MaxBackOff: s.config.MaxRetry,
 					})
 
-					errChan <- job.Run(ctx, ev.GetData())
+					select {
+					case errChan <- job.Run(ctx, ev.GetData()):
+					case <-s.quit:
+					}
 				}(ctx, handler)
 			}
 
