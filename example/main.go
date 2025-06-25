@@ -82,6 +82,7 @@ func main() {
 		wg.Done()
 		return nil
 	})
+	var once sync.Once
 	sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
 		validData, ok := data.(string)
 		if !ok {
@@ -89,7 +90,7 @@ func main() {
 		}
 		log.Println("job 3", validData)
 		time.Sleep(2 * time.Second)
-		wg.Done()
+		once.Do(func() { wg.Done() })
 		return errors.New("error")
 	})
 
