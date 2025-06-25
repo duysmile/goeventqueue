@@ -7,6 +7,7 @@ import (
 	"github.com/duysmile/goeventqueue/queue"
 )
 
+// Publisher posts events to a queue so that they can be consumed by subscribers.
 type Publisher interface {
 	Publish(ctx context.Context, event goeventqueue.Event) error
 }
@@ -26,6 +27,7 @@ func (p publisher) Publish(ctx context.Context, event goeventqueue.Event) error 
 	return nil
 }
 
+// NewPublisher returns a Publisher that writes events to the provided queue.
 func NewPublisher(q queue.Queue) Publisher {
 	return &publisher{
 		queue: q,

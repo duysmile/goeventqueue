@@ -9,17 +9,21 @@ import (
 	"github.com/duysmile/goeventqueue/queue"
 )
 
+// Subscriber consumes events from a Queue and dispatches them to registered
+// handlers.
 type Subscriber interface {
 	Start(ctx context.Context)
 	Register(name goeventqueue.EventName, handler Handler)
 	WithLogger(l Logger)
 }
 
+// Config defines parameters that control how the subscriber dispatches work.
 type Config struct {
 	MaxGoRoutine int64
 	MaxRetry     int64
 }
 
+// Handler processes event data received by the Subscriber.
 type Handler func(ctx context.Context, data interface{}) error
 
 type subscriber struct {
@@ -94,6 +98,8 @@ func (s *subscriber) startWorker(ctx context.Context, eQueue chan goeventqueue.E
 	}
 }
 
+// NewSubscriber creates a Subscriber that reads from the provided Queue using
+// the supplied configuration.
 func NewSubscriber(q queue.Queue, cfg Config) Subscriber {
 	return &subscriber{
 		queue:           q,
