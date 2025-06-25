@@ -75,7 +75,9 @@ func (s *subscriber) startWorker(ctx context.Context, eQueue chan goeventqueue.E
 				return
 			}
 
+			s.locker.RLock()
 			listHandler, ok := s.mapEventHandler[ev.GetName()]
+			s.locker.RUnlock()
 			if !ok {
 				continue
 			}
