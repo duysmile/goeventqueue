@@ -1,10 +1,11 @@
-package goeventqueue
+package subscriber
 
 import (
 	"context"
 	"time"
 )
 
+// JobConfig controls the retry behaviour when executing a job handler.
 type JobConfig struct {
 	MaxBackOff int64
 }
@@ -35,6 +36,8 @@ func (j *job) Run(ctx context.Context, data interface{}) error {
 	}
 }
 
+// NewJob creates a job that will run the given handler applying the retry
+// configuration provided.
 func NewJob(handler Handler, cfg JobConfig) *job {
 	return &job{
 		handler: handler,
