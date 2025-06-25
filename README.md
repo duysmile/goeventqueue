@@ -59,9 +59,10 @@ sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
 })
 ```
 
-Run workers to consume event
+Run workers to consume event and stop them gracefully when done
 ```go
 sub.Start(mainCtx)
+defer sub.Stop()
 ```
 
 Push event to queue
