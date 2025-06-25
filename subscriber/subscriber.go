@@ -1,34 +1,42 @@
-package goeventqueue
+package subscriber
 
 import (
 	"context"
 	"fmt"
 	"sync"
+
+	"github.com/duysmile/goeventqueue"
+	"github.com/duysmile/goeventqueue/queue"
 )
 
+// Subscriber consumes events from a Queue and dispatches them to registered
+// handlers.
 type Subscriber interface {
 	Start(ctx context.Context)
-	Register(name EventName, handler Handler)
+	Register(name goeventqueue.EventName, handler Handler)
 	WithLogger(l Logger)
+	Stop()
 }
 
+// Config defines parameters that control how the subscriber dispatches work.
 type Config struct {
 	MaxGoRoutine int64
 	MaxRetry     int64
 }
 
+// Handler processes event data received by the Subscriber.
 type Handler func(ctx context.Context, data interface{}) error
 
 type subscriber struct {
-	queue           Queue
-	mapEventHandler map[EventName][]Handler
+	queue           queue.Queue
+	mapEventHandler map[goeventqueue.EventName][]Handler
 	config          Config
 	locker          sync.Mutex
 	logger          Logger
 	quit            chan struct{}
 }
 
-func (s *subscriber) Register(name EventName, handler Handler) {
+func (s *subscriber) Register(name goeventqueue.EventName, handler Handler) {
 	s.locker.Lock()
 	defer s.locker.Unlock()
 
@@ -50,7 +58,7 @@ func (s *subscriber) Start(ctx context.Context) {
 	}
 }
 
-func (s *subscriber) startWorker(ctx context.Context, eQueue chan Event) {
+func (s *subscriber) startWorker(ctx context.Context, eQueue chan goeventqueue.Event) {
 	defer s.Recover()
 	for {
 		select {
@@ -91,12 +99,15 @@ func (s *subscriber) startWorker(ctx context.Context, eQueue chan Event) {
 	}
 }
 
-func NewSubscriber(q Queue, cfg Config) Subscriber {
+// NewSubscriber creates a Subscriber that reads from the provided Queue using
+// the supplied configuration.
+func NewSubscriber(q queue.Queue, cfg Config) Subscriber {
 	return &subscriber{
 		queue:           q,
-		mapEventHandler: make(map[EventName][]Handler),
+		mapEventHandler: make(map[goeventqueue.EventName][]Handler),
 		config:          cfg,
 		logger:          NewDefaultLogger(),
+		quit:            make(chan struct{}),
 	}
 }
 
