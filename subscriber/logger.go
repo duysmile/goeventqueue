@@ -1,4 +1,4 @@
-package goeventqueue
+package subscriber
 
 import "log"
 
