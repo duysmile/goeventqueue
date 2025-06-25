@@ -15,6 +15,7 @@ type Subscriber interface {
 	Start(ctx context.Context)
 	Register(name goeventqueue.EventName, handler Handler)
 	WithLogger(l Logger)
+	Stop()
 }
 
 // Config defines parameters that control how the subscriber dispatches work.
@@ -33,6 +34,7 @@ type subscriber struct {
 	locker          sync.Mutex
 	logger          Logger
 	quit            chan struct{}
+	wg              sync.WaitGroup
 }
 
 func (s *subscriber) Register(name goeventqueue.EventName, handler Handler) {
@@ -48,17 +50,20 @@ func (s *subscriber) Register(name goeventqueue.EventName, handler Handler) {
 
 func (s *subscriber) Stop() {
 	close(s.quit)
+	s.wg.Wait()
 }
 
 func (s *subscriber) Start(ctx context.Context) {
 	eQueue := s.queue.GetEventChan()
 	for i := int64(0); i < s.config.MaxGoRoutine; i++ {
+		s.wg.Add(1)
 		go s.startWorker(ctx, eQueue)
 	}
 }
 
 func (s *subscriber) startWorker(ctx context.Context, eQueue chan goeventqueue.Event) {
 	defer s.Recover()
+	defer s.wg.Done()
 	for {
 		select {
 		case <-ctx.Done():
@@ -106,6 +111,7 @@ func NewSubscriber(q queue.Queue, cfg Config) Subscriber {
 		mapEventHandler: make(map[goeventqueue.EventName][]Handler),
 		config:          cfg,
 		logger:          NewDefaultLogger(),
+		quit:            make(chan struct{}),
 	}
 }
 
