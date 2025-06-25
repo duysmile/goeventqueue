@@ -3,11 +3,15 @@ package main
 import (
 	"context"
 	"errors"
-	"github.com/duysmile/goeventqueue"
-	"go.uber.org/zap"
 	"log"
 	"sync"
 	"time"
+
+	"github.com/duysmile/goeventqueue"
+	"github.com/duysmile/goeventqueue/publisher"
+	"github.com/duysmile/goeventqueue/queue"
+	"github.com/duysmile/goeventqueue/subscriber"
+	"go.uber.org/zap"
 )
 
 type testEvent struct {
@@ -41,10 +45,10 @@ func (l logger) Error(msg string, err error) {
 func main() {
 	var TestEvent goeventqueue.EventName = "test-event"
 
-	q := goeventqueue.NewLocalQueue(2)
+	q := queue.NewLocalQueue(2)
 
-	pub := goeventqueue.NewPublisher(q)
-	sub := goeventqueue.NewSubscriber(q, goeventqueue.Config{
+	pub := publisher.NewPublisher(q)
+	sub := subscriber.NewSubscriber(q, subscriber.Config{
 		MaxGoRoutine: 2,
 		MaxRetry:     1,
 	})
