@@ -4,7 +4,7 @@ import "github.com/duysmile/goeventqueue"
 
 // Queue exposes a channel for delivering events to subscribers.
 type Queue interface {
-        GetEventChan() chan goeventqueue.Event
+	GetEventChan() chan goeventqueue.Event
 }
 
 type localQueue struct {

@@ -4,7 +4,6 @@ import "log"
 
 // Logger records errors that occur within jobs or subscribers.
 type Logger interface {
-	// Error logs an error message with the associated error value.
 	Error(msg string, err error)
 }
 
