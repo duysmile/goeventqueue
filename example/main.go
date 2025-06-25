@@ -63,7 +63,7 @@ func main() {
 
 	wg := sync.WaitGroup{}
 
-	wg.Add(4)
+	wg.Add(3)
 	sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
 		validData, ok := data.(string)
 		if !ok {
@@ -82,6 +82,7 @@ func main() {
 		wg.Done()
 		return nil
 	})
+	var once sync.Once
 	sub.Register(TestEvent, func(ctx context.Context, data interface{}) error {
 		validData, ok := data.(string)
 		if !ok {
@@ -89,11 +90,12 @@ func main() {
 		}
 		log.Println("job 3", validData)
 		time.Sleep(2 * time.Second)
-		wg.Done()
+		once.Do(func() { wg.Done() })
 		return errors.New("error")
 	})
 
 	sub.Start(mainCtx)
+	defer sub.Stop()
 
 	_ = pub.Publish(mainCtx, NewEvent(TestEvent, "hello"))
 	wg.Wait()
